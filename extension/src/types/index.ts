@@ -3,6 +3,7 @@ export interface ProductAttributes {
   material?: string[];
   style?: string[];
   shape?: string[];
+  finish?: string[];
   usage?: string[];
   [key: string]: string[] | undefined;
 }
@@ -14,27 +15,31 @@ export interface ProductAnalysis {
   search_terms: string[];
 }
 
-export interface Product {
-  id: string;
+export interface ProductCandidate {
   title: string;
-  image_url: string;
-  price: number;
-  currency: string;
-  rating: number;
-  review_count: number;
   url: string;
-  category: string;
-}
-
-export interface RankedProduct {
-  product: Product;
-  similarity_score: number;
+  domain: string;
+  marketplace: string;
+  snippet?: string;
+  search_query: string;
+  relevance_score?: number;
+  visual_similarity_score?: number;
+  attribute_score?: number;
+  final_score?: number;
   match_reasons: string[];
 }
 
-export interface FindProductsResponse {
+export interface DirectSearchLink {
+  marketplace: string;
+  query: string;
+  url: string;
+}
+
+export interface SearchResponse {
   analysis: ProductAnalysis;
-  products: RankedProduct[];
+  queries: string[];
+  products: ProductCandidate[];
+  direct_searches: DirectSearchLink[];
 }
 
 export type ExtensionMessageType =

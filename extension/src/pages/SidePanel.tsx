@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Sparkles, Search, Crop, Image as ImageIcon, X, RefreshCw } from 'lucide-react';
-import { FindProductsResponse, ProductAnalysis, RankedProduct } from '../types';
+import { SearchResponse, ProductAnalysis, ProductCandidate, DirectSearchLink } from '../types';
 import { findSimilarProducts, searchByQueries } from '../api/client';
 import { LoadingState } from '../components/LoadingState';
 import { ErrorState } from '../components/ErrorState';
@@ -12,7 +12,8 @@ export const SidePanel: React.FC = () => {
   const [stage, setStage] = useState<string>('Analyzing image...');
   const [error, setError] = useState<string | null>(null);
   const [analysis, setAnalysis] = useState<ProductAnalysis | null>(null);
-  const [products, setProducts] = useState<RankedProduct[]>([]);
+  const [products, setProducts] = useState<ProductCandidate[]>([]);
+  const [directSearches, setDirectSearches] = useState<DirectSearchLink[]>([]);
   const [searchQueryInput, setSearchQueryInput] = useState<string>('');
 
   const currentProcessingId = useRef<number>(0);
@@ -22,6 +23,7 @@ export const SidePanel: React.FC = () => {
       setCroppedImage(null);
       setAnalysis(null);
       setProducts([]);
+      setDirectSearches([]);
       setError(null);
       setLoading(false);
     });
@@ -30,16 +32,16 @@ export const SidePanel: React.FC = () => {
   const processImage = async (imgDataUrl: string) => {
     const requestId = ++currentProcessingId.current;
 
-    // Reset UI states immediately for fresh crop
     setCroppedImage(imgDataUrl);
     setLoading(true);
     setError(null);
     setProducts([]);
+    setDirectSearches([]);
     setAnalysis(null);
     setSearchQueryInput('');
 
     try {
-      const data: FindProductsResponse = await findSimilarProducts(imgDataUrl, (currentStage) => {
+      const data: SearchResponse = await findSimilarProducts(imgDataUrl, (currentStage) => {
         if (requestId === currentProcessingId.current) {
           setStage(currentStage);
         }
@@ -48,8 +50,9 @@ export const SidePanel: React.FC = () => {
       if (requestId === currentProcessingId.current) {
         setAnalysis(data.analysis);
         setProducts(data.products || []);
-        if (data.analysis?.search_terms?.length) {
-          setSearchQueryInput(data.analysis.search_terms[0]);
+        setDirectSearches(data.direct_searches || []);
+        if (data.queries?.length) {
+          setSearchQueryInput(data.queries[0]);
         } else if (data.analysis?.category) {
           setSearchQueryInput(data.analysis.category);
         }
@@ -87,10 +90,10 @@ export const SidePanel: React.FC = () => {
         if (changes.currentCroppedImage?.newValue) {
           processImage(changes.currentCroppedImage.newValue);
         } else if (changes.currentCroppedImage && !changes.currentCroppedImage.newValue) {
-          // Cleared from storage
           setCroppedImage(null);
           setAnalysis(null);
           setProducts([]);
+          setDirectSearches([]);
           setError(null);
           setLoading(false);
         }
@@ -116,7 +119,6 @@ export const SidePanel: React.FC = () => {
 
       chrome.tabs.sendMessage(tab.id, { type: 'START_SELECTION_MODE' }, (response) => {
         if (chrome.runtime.lastError) {
-          console.warn('Tab message failed, injecting content script:', chrome.runtime.lastError.message);
           chrome.scripting.executeScript({
             target: { tabId: tab.id! },
             files: ['content/pinterest.js']
@@ -147,7 +149,7 @@ export const SidePanel: React.FC = () => {
 
     setLoading(true);
     setError(null);
-    setStage('Searching Amazon.in...');
+    setStage('Searching marketplaces...');
 
     try {
       const customAnalysis: ProductAnalysis = {
@@ -155,7 +157,7 @@ export const SidePanel: React.FC = () => {
         search_terms: [searchQueryInput.trim()],
       };
       const updatedProducts = await searchByQueries(customAnalysis, [searchQueryInput.trim()]);
-      setProducts(updatedProducts);
+      setProducts(updatedProducts as any);
     } catch (err: any) {
       setError(err.message || 'Search failed. Please try again.');
     } finally {
@@ -279,7 +281,7 @@ export const SidePanel: React.FC = () => {
           ) : error ? (
             <ErrorState message={error} onRetry={() => processImage(croppedImage)} />
           ) : (
-            <ProductResults products={products} />
+            <ProductResults products={products} directSearches={directSearches} />
           )}
         </div>
       ) : (
@@ -291,7 +293,7 @@ export const SidePanel: React.FC = () => {
           <div>
             <h2 className="font-bold text-gray-900 text-sm">No Object Selected</h2>
             <p className="text-xs text-gray-500 mt-1 leading-relaxed">
-              Select an item directly from Pinterest to find matching products on Amazon.in.
+              Select an item directly from Pinterest to find matching products across Amazon.in, Flipkart, IKEA & more.
             </p>
           </div>
 
@@ -314,7 +316,7 @@ export const SidePanel: React.FC = () => {
             </div>
             <div className="flex items-center gap-2 text-xs text-gray-600">
               <div className="w-5 h-5 rounded-full bg-gray-100 flex items-center justify-center font-bold text-[10px]">3</div>
-              <span>Drag selection box & view Amazon matches</span>
+              <span>Drag selection box & view ranked marketplace products</span>
             </div>
           </div>
         </div>
