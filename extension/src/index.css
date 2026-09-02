@@ -1,0 +1,51 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+}
+
+/* Pinterest Overlay UI Styles */
+.pinterest-finder-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 99999;
+  background: #E60023;
+  color: white;
+  padding: 8px 14px;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  border: none;
+  font-family: inherit;
+}
+
+.pinterest-finder-btn:hover {
+  background: #AD081B;
+  transform: scale(1.04);
+}
+
+.pinterest-crop-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 999999;
+  background: rgba(0, 0, 0, 0.65);
+  cursor: crosshair;
+  user-select: none;
+}
