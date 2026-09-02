@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+extension/node_modules/
+
+# Build outputs
+dist/
+extension/dist/
+
+# Environment & Credentials
+.env
+.env.local
+.env.*.local
+*.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.venv/
+venv/
+ENV/
+env/
+
+# IDE / OS
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
