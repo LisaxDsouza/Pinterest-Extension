@@ -42,6 +42,41 @@ export interface SearchResponse {
   direct_searches: DirectSearchLink[];
 }
 
+export interface HistoryItem {
+  id: string;
+  timestamp: number;
+  croppedImage: string;
+  category: string;
+  description: string;
+  queries: string[];
+  products: ProductCandidate[];
+  directSearches: DirectSearchLink[];
+}
+
+export interface PinnedIdea {
+  id: string;
+  title: string;
+  url: string;
+  domain: string;
+  marketplace: string;
+  snippet?: string;
+  croppedImage?: string;
+  category?: string;
+  addedAt: number;
+  notes?: string;
+}
+
+export interface Board {
+  id: string;
+  name: string;
+  description?: string;
+  createdAt: number;
+  updatedAt: number;
+  ideas: PinnedIdea[];
+}
+
+export type SidePanelTab = 'search' | 'history' | 'boards';
+
 export type ExtensionMessageType =
   | 'OPEN_SIDE_PANEL'
   | 'START_SELECTION_MODE'

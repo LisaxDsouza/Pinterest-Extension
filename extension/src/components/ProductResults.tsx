@@ -6,9 +6,18 @@ import { ExternalLink, Search } from 'lucide-react';
 interface ProductResultsProps {
   products: ProductCandidate[];
   directSearches?: DirectSearchLink[];
+  croppedImage?: string;
+  category?: string;
+  onPinnedSuccess?: () => void;
 }
 
-export const ProductResults: React.FC<ProductResultsProps> = ({ products, directSearches = [] }) => {
+export const ProductResults: React.FC<ProductResultsProps> = ({
+  products,
+  directSearches = [],
+  croppedImage,
+  category,
+  onPinnedSuccess,
+}) => {
   return (
     <div className="space-y-4 pb-6">
       {/* Direct Search Fallback Banners */}
@@ -49,7 +58,13 @@ export const ProductResults: React.FC<ProductResultsProps> = ({ products, direct
       ) : (
         <div className="grid grid-cols-1 gap-3.5">
           {products.map((candidate, idx) => (
-            <ProductCard key={candidate.url || idx} candidate={candidate} />
+            <ProductCard
+              key={candidate.url || idx}
+              candidate={candidate}
+              croppedImage={croppedImage}
+              category={category}
+              onPinnedSuccess={onPinnedSuccess}
+            />
           ))}
         </div>
       )}
