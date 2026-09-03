@@ -1,6 +1,6 @@
 import { SearchResponse, ProductCandidate, ProductAnalysis } from '../types';
 
-let DEFAULT_BACKEND_URL = 'http://localhost:8000';
+let DEFAULT_BACKEND_URL = 'https://backend-one-kappa-47.vercel.app';
 
 export async function getBackendBaseUrl(): Promise<string> {
   return new Promise((resolve) => {
@@ -108,7 +108,7 @@ export async function findSimilarProducts(
         },
         {
           title: 'SVENSAÅ Magnetic Memo & Wall Planner Board - IKEA India',
-          url: 'https://www.ikea.com/in/en/search/?q=magnetic+whiteboard+calendar',
+          url: 'https://www.ikea.com/in/en/p/forsa-work-lamp-black-80416281/',
           domain: 'ikea.com',
           marketplace: 'ikea',
           snippet: 'SVENSAÅ magnetic memo board in white metal.',
