@@ -1,6 +1,33 @@
 import { SearchResponse, ProductCandidate, ProductAnalysis } from '../types';
 
-const BACKEND_BASE_URL = 'http://localhost:8000';
+let DEFAULT_BACKEND_URL = 'http://localhost:8000';
+
+export async function getBackendBaseUrl(): Promise<string> {
+  return new Promise((resolve) => {
+    if (typeof chrome !== 'undefined' && chrome.storage?.local) {
+      chrome.storage.local.get(['customBackendUrl'], (res) => {
+        if (res.customBackendUrl && res.customBackendUrl.trim()) {
+          resolve(res.customBackendUrl.trim().replace(/\/+$/, ''));
+        } else {
+          resolve(DEFAULT_BACKEND_URL);
+        }
+      });
+    } else {
+      resolve(DEFAULT_BACKEND_URL);
+    }
+  });
+}
+
+export async function setCustomBackendUrl(url: string): Promise<void> {
+  const cleanUrl = url.trim().replace(/\/+$/, '');
+  return new Promise((resolve) => {
+    if (typeof chrome !== 'undefined' && chrome.storage?.local) {
+      chrome.storage.local.set({ customBackendUrl: cleanUrl }, () => resolve());
+    } else {
+      resolve();
+    }
+  });
+}
 
 export async function findSimilarProducts(
   imageDataUrl: string,
@@ -8,6 +35,8 @@ export async function findSimilarProducts(
 ): Promise<SearchResponse> {
   try {
     if (onProgress) onProgress('Analyzing image...');
+
+    const baseUrl = await getBackendBaseUrl();
 
     // Convert Base64 Data URL to Blob
     const response = await fetch(imageDataUrl);
@@ -19,7 +48,7 @@ export async function findSimilarProducts(
     if (onProgress) onProgress('Finding products on marketplaces...');
 
     try {
-      const apiResponse = await fetch(`${BACKEND_BASE_URL}/api/search`, {
+      const apiResponse = await fetch(`${baseUrl}/api/search`, {
         method: 'POST',
         body: formData,
       });
@@ -28,12 +57,14 @@ export async function findSimilarProducts(
         if (onProgress) onProgress('Ranking results...');
         const data: SearchResponse = await apiResponse.json();
         return data;
+      } else {
+        console.warn(`Backend responded with status ${apiResponse.status} on ${baseUrl}`);
       }
     } catch (networkErr) {
-      console.warn('Backend server unreachable on localhost:8000, using client fallback mock:', networkErr);
+      console.warn(`Backend server unreachable on ${baseUrl}:`, networkErr);
     }
 
-    // Client-side fallback if backend server is not running
+    // Client-side fallback if backend server is unreachable
     if (onProgress) onProgress('Finding products...');
     await new Promise((r) => setTimeout(r, 500));
 
@@ -42,60 +73,60 @@ export async function findSimilarProducts(
 
     return {
       analysis: {
-        category: 'desk lamp',
-        description: 'minimalist black metal desk lamp',
+        category: 'magnetic whiteboard calendar',
+        description: 'aesthetic white magnetic monthly calendar board for wall organization',
         attributes: {
-          color: ['black'],
-          material: ['metal'],
+          color: ['white', 'black'],
+          material: ['metal', 'whiteboard'],
           style: ['minimalist', 'modern'],
-          finish: ['matte'],
-          usage: ['desk', 'study']
+          finish: ['smooth'],
+          usage: ['wall', 'office', 'study']
         },
-        search_terms: ['black minimalist desk lamp', 'modern black study lamp']
+        search_terms: ['magnetic whiteboard calendar for wall', 'aesthetic monthly planner board']
       },
-      queries: ['black minimalist desk lamp', 'modern black study lamp'],
+      queries: ['magnetic whiteboard calendar for wall', 'aesthetic monthly planner board'],
       products: [
         {
-          title: 'Modern Black Adjustable Metal LED Desk Lamp for Study',
-          url: 'https://www.amazon.in/dp/B08X12345',
+          title: 'Aesthetic Magnetic Monthly Whiteboard Calendar for Wall',
+          url: 'https://www.amazon.in/s?k=magnetic+whiteboard+calendar+for+wall',
           domain: 'amazon.in',
           marketplace: 'amazon',
-          snippet: 'Buy Modern Black Adjustable Metal LED Desk Lamp online at best price in India on Amazon.in.',
-          search_query: 'black minimalist desk lamp',
+          snippet: 'Buy Aesthetic Magnetic Monthly Whiteboard Calendar for Wall online at best price in India on Amazon.in.',
+          search_query: 'magnetic whiteboard calendar for wall',
           final_score: 0.94,
-          match_reasons: ['Same product category', 'Black color matches', 'Similar minimalist style']
+          match_reasons: ['Same product category', 'Whiteboard material match', 'Similar minimalist style']
         },
         {
-          title: 'Minimalist Metal Table Lamp Matte Black Finish',
-          url: 'https://www.flipkart.com/p/itm123456789',
+          title: 'Magnetic Wall Planner & Memo Organizer Board',
+          url: 'https://www.flipkart.com/search?q=magnetic+whiteboard+calendar',
           domain: 'flipkart.com',
           marketplace: 'flipkart',
-          snippet: 'Shop Minimalist Metal Table Lamp Matte Black Finish for Rs 1,899 on Flipkart.',
-          search_query: 'modern black study lamp',
+          snippet: 'Shop Magnetic Wall Planner & Memo Organizer Board on Flipkart.',
+          search_query: 'aesthetic monthly planner board',
           final_score: 0.88,
-          match_reasons: ['Similar black metal design', 'Matte finish match']
+          match_reasons: ['Similar planner design', 'Smooth finish match']
         },
         {
-          title: 'FORSÅ Work lamp, black - IKEA India',
-          url: 'https://www.ikea.com/in/en/p/forsa-work-lamp-black-80416281/',
+          title: 'SVENSAÅ Magnetic Memo & Wall Planner Board - IKEA India',
+          url: 'https://www.ikea.com/in/en/search/?q=magnetic+whiteboard+calendar',
           domain: 'ikea.com',
           marketplace: 'ikea',
-          snippet: 'FORSÅ work lamp in matte black metal with adjustable arm.',
-          search_query: 'black minimalist desk lamp',
+          snippet: 'SVENSAÅ magnetic memo board in white metal.',
+          search_query: 'magnetic whiteboard calendar for wall',
           final_score: 0.85,
-          match_reasons: ['Same category match', 'Matte black metal']
+          match_reasons: ['Same category match', 'Minimalist IKEA design']
         }
       ],
       direct_searches: [
         {
           marketplace: 'amazon',
-          query: 'black minimalist desk lamp',
-          url: 'https://www.amazon.in/s?k=black+minimalist+desk+lamp'
+          query: 'magnetic whiteboard calendar for wall',
+          url: 'https://www.amazon.in/s?k=magnetic+whiteboard+calendar+for+wall'
         },
         {
           marketplace: 'flipkart',
-          query: 'black minimalist desk lamp',
-          url: 'https://www.flipkart.com/search?q=black+minimalist+desk+lamp'
+          query: 'magnetic whiteboard calendar for wall',
+          url: 'https://www.flipkart.com/search?q=magnetic+whiteboard+calendar+for+wall'
         }
       ]
     };
@@ -110,7 +141,8 @@ export async function searchByQueries(
   queries: string[]
 ): Promise<ProductCandidate[]> {
   try {
-    const res = await fetch(`${BACKEND_BASE_URL}/api/search`, {
+    const baseUrl = await getBackendBaseUrl();
+    const res = await fetch(`${baseUrl}/api/search`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ analysis, queries })
