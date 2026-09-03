@@ -2,6 +2,8 @@ import os
 from typing import List
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+env_file_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env")
+
 
 class Settings(BaseSettings):
     HOST: str = "127.0.0.1"
@@ -26,7 +28,7 @@ class Settings(BaseSettings):
     MAX_MARKETPLACES: int = 3
 
     model_config = SettingsConfigDict(
-        env_file=os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env"),
+        env_file=env_file_path if os.path.exists(env_file_path) else None,
         env_file_encoding="utf-8",
         extra="ignore"
     )
